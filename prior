@@ -202,7 +202,9 @@ prompt.get([
       //
       if (match.length > 1) {
         console.log('');
-        console.log('Conflict found, can\'t find an unique GitHub repository for the following module: '+ kuler(pkg.name, 'green'));
+        console.log('Conflict found, can\'t find an unique GitHub repository for the following module:');
+        console.log('  name: '+ kuler(pkg.name, 'green'));
+        console.log('  desc: '+ pkg.description);
         console.log('To resolve this conflict please supply one of the following options:');
         console.log('');
 
@@ -210,6 +212,7 @@ prompt.get([
           console.log(kuler(index, 'green') +':');
           console.log('  name: '+ repo.name);
           console.log('  desc: '+ repo.description);
+          console.log('  fork: '+ repo.fork);
           console.log('  url: '+ repo.url);
         });
 
