@@ -1,6 +1,6 @@
 {
   "name": "prior",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Create a list of prior inventions based on your Open Source work",
   "main": "index.js",
   "scripts": {
