@@ -154,7 +154,7 @@ prompt.get([
     var duplicate = []
       , unique = [];
 
-    async.each(data.npm, function find(pkg, next) {
+    async.eachSeries(data.npm, function find(pkg, next) {
       /**
        * Simple helper method for adding a selected package to the unique array.
        * 
@@ -231,7 +231,7 @@ prompt.get([
       //
       // @TODO run through formatters;
       //
-      require('./formatters/'+ (process.argv.format || 'markdown'))(unique);
+      require('./formatters/'+ (argv.format || 'markdown'))(unique);
     });
   });
 });
