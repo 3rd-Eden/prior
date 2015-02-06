@@ -210,7 +210,7 @@ prompt.get([
           console.log('  name: '+ repo.name);
           console.log('  desc: '+ repo.description);
           console.log('  fork: '+ repo.fork);
-          console.log('  url: '+ repo.url);
+          console.log('  url:  '+ repo.url);
           console.log('');
         });
 
