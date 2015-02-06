@@ -14,6 +14,9 @@ As this is an command line utility it can be installed using:
 npm install -g prior
 ```
 
+While the name of the module is `prior` we will install the command line utility
+as **prior-inventions**. This also what you will see in all examples.
+
 ## Generating
 
 In order to generate a list we need to know a couple of things
