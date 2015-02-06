@@ -22,7 +22,8 @@ prompt:
 In addition to the flags mentioned above, we also support the following flags:
 
 --format              Select an output formatter for the generated list.
---help                Output's this help message
+--help                Output's this help message.
+--no-fork             Do not includes in the actual outputted file.
 
 Formatters:
 
