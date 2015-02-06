@@ -73,10 +73,10 @@ After everything is done you will have a `prior-inventions.<ext>` in the
 directory. The `<ext>` depends on the output formatter you used. The available
 output formatters can be found by running `prior-inventions --help`.
 
-> Please do note that YOU should check and verify the generated list. It
+> **Please do note that YOU should check and verify the generated list. It
 > includes private repositories and public repositories where you might not be
 > the author off and should be deleted from your list. This is some manual labor
-> that we cannot really automate safely.
+> that we cannot really automate safely.**
 
 ## License
 
