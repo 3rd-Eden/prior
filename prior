@@ -34,12 +34,18 @@ prompt.get([
 
   async.parallel({
     npm: function download(next) {
-      return next();
       npm.users.list(details.npm, function list(err, packages) {
         if (err) return next(err);
 
         async.map(packages, function map(data, next) {
-          npm.packages.get(data.name, next);
+          npm.packages.get(data.name, function (err, data) {
+            if (err) return next(err);
+
+            //
+            // The npm module returns arrays by default, we just want only item.
+            //
+            next(err, data[0]);
+          });
         }, next);
       });
     },
@@ -74,13 +80,68 @@ prompt.get([
           listoflists.forEach(function each(repos) {
             Array.prototype.push.apply(list, repos);
           });
+          
+          async.map(list, function map(repo) {
+            repo.npm = {};
 
-          next(err, list);
+            github.repository.contents(repo.fullname, { 
+              path: 'package.json'
+            }, function (err, data) {
+              if (err || !data || !data.length) return next(undefined, repo);
+
+              //
+              // Parse the contents of repository to see if we can find
+              // a package.json so we will have something easier to match
+              // against.
+              //
+              try { 
+                data = JSON.parse((new Buffer(data[0].contents, data[0].encoding)).toString('utf-8')); 
+              } catch (e) { return next(undefined, repo); }
+
+              repo.json = data;
+              next(undefined, repo);
+            });
+          }, name);
         });
       });
     }
   }, function downloaded(err, data) {
-    console.log('args', data.github.length);
     if (err) throw err;
+
+    //
+    // Reduce the amount of data that we received from GitHub so we only got the
+    // bare minimum of information that we need.
+    //
+    data.github = data.github.map(function map(repo) {
+      return {
+        description: repo.description,      // Fallback for npm description.
+        url: repo.html_url,                 // For matching with npm modules.
+        fork: repo.fork,                    // Might want to exclude forks, not OC.
+        name: repo.name,                    // Name of module
+        created: new Date(repo.created_at), // Created at.
+        json: repo.npm,                     // Reference to package.json in repo.
+        author: repo.owner.name             // Possible name of the author.
+      };
+    });
+
+    //
+    // Reduce the amount of data from npm to only contain the useful
+    // information, this should somewhat mirror the data available from git for
+    // matching.
+    //
+    data.npm = data.npm.map(function map(pkg) {
+      return {
+        description: pkg.description,     // Description of the module
+        url: (pkg.repository || {}).url,  // Possible repository URL.
+        fork: false,                      // Sorry, we don't understand forks.
+        name: pkg.name,                   // Name of the module.
+        created: new Date(pkg.created),   // Creation date.
+        author: (pkg.author || {}).name   // Name of the author.
+      };
+    });
+
+    //
+    // Now for the tricky part, merging and matching the data.
+    //
   });
 });
