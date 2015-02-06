@@ -214,6 +214,7 @@ prompt.get([
           console.log('  desc: '+ repo.description);
           console.log('  fork: '+ repo.fork);
           console.log('  url: '+ repo.url);
+          console.log('');
         });
 
         console.log('');
@@ -238,10 +239,17 @@ prompt.get([
       }));
 
       //
+      // Check if we need to exclude information.
+      //
+      if (argv.fork === false) unique = unique.filter(function filter(project) {
+        return !project.fork;
+      });
+
+      //
       // @TODO run through formatters;
       //
       require('./formatters/'+ (argv.format || 'markdown'))(unique.sort(function (a, b) {
-        return a.created > b.created;
+        return +a.created - +b.created;
       }));
     });
   });
