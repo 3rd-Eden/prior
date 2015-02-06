@@ -16,12 +16,12 @@ module.exports = function markdown(list) {
 
   list.forEach(function each(invention) {
     file.push('');
-    file.push('**Name:**       '+ invention.name);
-    file.push('**Description:**'+ invention.description);
-    file.push('**Created:**    '+ invention.created.toLocaleDateString());
+    file.push('**Name:** '+ invention.name);
+    file.push('**Description:** '+ invention.description);
+    file.push('**Created:** '+ invention.created.toLocaleDateString());
 
     if (invention.url) {
-      file.push('**URL:**        '+ invention.url);
+      file.push('**URL:** '+ invention.url);
     }
   });
 
