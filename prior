@@ -201,15 +201,21 @@ prompt.get([
       // declining the matching repository.
       //
       if (match.length > 1) {
+        console.log('');
+        console.log('Conflict found, cant find a unique GitHub repository for the following module: '+ kuler(pkg.name, 'green'));
+        console.log('To resolve this conflict please supply one of the following options:');
+        console.log('');
+
         match.forEach(function each(repo, index) {
-          console.log('');
-          console.log('Option: ', kuler(index, 'green'));
+          console.log(kuler(index, 'green') +':');
           console.log('  name: '+ repo.name);
           console.log('  desc: '+ repo.description);
           console.log('  url: '+ repo.url);
         });
 
+        console.log('');
         console.log('To decline all options supply: '+ kuler('x', 'red'));
+        console.log('');
         return prompt.get('choice', function prompted(err, selected) {
           if (err) throw err;
 
