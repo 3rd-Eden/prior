@@ -173,7 +173,8 @@ prompt.get([
           created: +pkg.created > +match.created
           ? match.created
           : pkg.created,
-          author: pkg.author
+          author: pkg.author,
+          url: match.url
         });
 
         next();
