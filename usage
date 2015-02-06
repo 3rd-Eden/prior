@@ -1,0 +1,25 @@
+
+prior-inventions:
+
+A simple tool to create a list of prior inventions based on the work that you've
+done on GitHub and npm.
+
+Usage:
+
+  $ prior-inventions [optional flags]
+
+Flags:
+
+The flags allows you to override the default prompt for information so the process
+of gathering information starts directly. The following flags will override the
+prompt:
+
+--token       Your GitHub account token.
+--npm         Your npm username.
+--github      Your GitHub username.
+--registry    URL to an public npm registry you want to use.
+
+In addition to the flags mentioned above, we also support the following flags:
+
+--format      Select an output formatter for the generated list.
+--help        Output's this help message

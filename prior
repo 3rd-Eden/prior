@@ -3,6 +3,7 @@
 'use strict';
 
 var env = process.env
+  , url = require('url')
   , async = require('async')
   , kuler = require('kuler')
   , prompt = require('prompt')
@@ -10,6 +11,17 @@ var env = process.env
   , GitHulk = require('githulk')
   , Registry = require('npm-registry')
   , who = require('shelljs').exec('npm whoami', { silent: true }).output.trim();
+
+//
+// Handle a --help flag
+//
+if (argv.help) {
+  return require('fs').readFileSync(__dirname +'/usage', 'utf-8')
+  .split('\n')
+  .forEach(function output(line) {
+    console.log(kuler('help:', 'hotpink'), line);
+  });
+}
 
 //
 // Prompt for the information that was not supplied using cli flags, this is
@@ -81,10 +93,10 @@ prompt.get([
             Array.prototype.push.apply(list, repos);
           });
           
-          async.map(list, function map(repo) {
+          async.map(list, function map(repo, next) {
             repo.npm = {};
 
-            github.repository.contents(repo.fullname, { 
+            github.repository.contents(repo.full_name, { 
               path: 'package.json'
             }, function (err, data) {
               if (err || !data || !data.length) return next(undefined, repo);
@@ -101,7 +113,7 @@ prompt.get([
               repo.json = data;
               next(undefined, repo);
             });
-          }, name);
+          }, next);
         });
       });
     }
@@ -119,8 +131,7 @@ prompt.get([
         fork: repo.fork,                    // Might want to exclude forks, not OC.
         name: repo.name,                    // Name of module
         created: new Date(repo.created_at), // Created at.
-        json: repo.npm,                     // Reference to package.json in repo.
-        author: repo.owner.name             // Possible name of the author.
+        json: repo.npm                      // Reference to package.json in repo.
       };
     });
 
@@ -140,8 +151,87 @@ prompt.get([
       };
     });
 
-    //
-    // Now for the tricky part, merging and matching the data.
-    //
+    var duplicate = []
+      , unique = [];
+
+    async.each(data.npm, function find(pkg, next) {
+      /**
+       * Simple helper method for adding a selected package to the unique array.
+       * 
+       * @param {Object} pkg npm package contents.
+       * @param {Object} match github contents.
+       * @api private
+       */
+      function add(pkg, match) {
+        duplicate.push(match);
+        unique.push({
+          name: pkg.name || match.name,
+          description: match.description.length > pkg.description.length
+          ? match.description
+          : pkg.description,
+          fork: match.fork,
+          created: +pkg.created > +match.created
+          ? match.created
+          : pkg.created,
+          author: pkg.author
+        });
+
+        next();
+      }
+
+      //
+      // Attempt to match the npm data with github repositories.
+      //
+      var match = data.github.filter(function filter(repo) {
+        return repo.name === pkg.name
+        || url.parse(repo.url || '').pathname === url.parse(pkg.url || '').pathname
+        || repo.json.name === pkg.name
+        || repo.json.description === pkg.description
+        ;
+      });
+
+      if (!match.length) {
+        unique.push(pkg);
+        return next();
+      }
+
+      //
+      // Possible problem situation here, we've found multiple matches for
+      // a single package so we have to prompt the user in to selecting or
+      // declining the matching repository.
+      //
+      if (match.length > 1) {
+        match.forEach(function each(repo, index) {
+          console.log('');
+          console.log('Option: ', kuler(index, 'green'));
+          console.log('  name: '+ repo.name);
+          console.log('  desc: '+ repo.description);
+          console.log('  url: '+ repo.url);
+        });
+
+        console.log('To decline all options supply: '+ kuler('x', 'red'));
+        return prompt.get('choice', function prompted(err, selected) {
+          if (err) throw err;
+
+          if (selected.choice === 'x') {
+            unique.push(pkg);
+            return next();
+          }
+
+          add(pkg, match[+selected.choice]);
+        });
+      }
+
+      add(pkg, match.pop());
+    }, function () {
+      Array.prototype.push.apply(unique, data.github.filter(function filter(repo) {
+        return !~duplicate.indexOf(repo);
+      }));
+
+      //
+      // @TODO run through formatters;
+      //
+      require('./formatters/'+ (process.argv.format || 'markdown'))(unique);
+    });
   });
 });
