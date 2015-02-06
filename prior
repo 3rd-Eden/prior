@@ -231,7 +231,9 @@ prompt.get([
       //
       // @TODO run through formatters;
       //
-      require('./formatters/'+ (argv.format || 'markdown'))(unique);
+      require('./formatters/'+ (argv.format || 'markdown'))(unique.sort(function (a, b) {
+        return a.created > b.created;
+      }));
     });
   });
 });
