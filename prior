@@ -1,0 +1,86 @@
+#!/usr/bin/env node
+
+'use strict';
+
+var env = process.env
+  , async = require('async')
+  , kuler = require('kuler')
+  , prompt = require('prompt')
+  , argv = require('argh').argv 
+  , GitHulk = require('githulk')
+  , Registry = require('npm-registry')
+  , who = require('shelljs').exec('npm whoami', { silent: true }).output.trim();
+
+//
+// Prompt for the information that was not supplied using cli flags, this is
+// required information and needed to continue with the spidering of data.
+//
+prompt.override = argv;
+prompt.start();
+
+//
+// Get some sane defaults that we can spider from the user's system
+//
+prompt.get([
+  { name: 'npm', default: who },
+  { name: 'github', default: who },
+  { name: 'token', default: env.GITHULK_TOKEN || env.GITHULK || env.GITHUB_TOKEN  },
+  { name: 'registry', default: Registry.mirrors.nodejitsu }
+], function received(err, details) {
+  if (err) throw err;
+  
+  var npm = new Registry({ registry: details.registry })
+    , github = new GitHulk({ token: details.token });
+
+  async.parallel({
+    npm: function download(next) {
+      return next();
+      npm.users.list(details.npm, function list(err, packages) {
+        if (err) return next(err);
+
+        async.map(packages, function map(data, next) {
+          npm.packages.get(data.name, next);
+        }, next);
+      });
+    },
+
+    github: function download(next) {
+      github.organizations.list(function err(err, orgs) {
+        if (err) return next(err);
+
+        //
+        // Mark as organization so we can add it repo's that we need to check.
+        //
+        orgs = orgs.map(function map(org) {
+          org.organization = true;
+          return org;
+        });
+
+        //
+        // Add our username in to the list of organizations that we need to
+        // spider.
+        //
+        orgs.push({ login: details.github });
+
+        async.map(orgs, function map(data, next) {
+          github.repository.list(data.login, { 
+            organization: data.organization 
+          }, next);
+        }, function failed(err, listoflists) {
+          if (err) return next(err);
+
+          var list = [];
+
+          listoflists.forEach(function each(repos) {
+            Array.prototype.push.apply(list, repos);
+          });
+
+          next(err, list);
+        });
+      });
+    }
+  }, function downloaded(err, data) {
+    console.log('args', data.github.length);
+    if (err) throw err;
+  });
+});

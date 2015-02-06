@@ -1,0 +1,35 @@
+{
+  "name": "prior",
+  "version": "1.0.0",
+  "description": "Create a list of prior inventions based on your Open Source work",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/3rd-Eden/prior"
+  },
+  "keywords": [
+    "prior",
+    "invention"
+  ],
+  "author": "Arnout Kazemier",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/3rd-Eden/prior/issues"
+  },
+  "homepage": "https://github.com/3rd-Eden/prior",
+  "dependencies": {
+    "argh": "0.1.x",
+    "async": "0.9.x",
+    "githulk": "0.2.x",
+    "kuler": "0.0.x",
+    "npm-registry": "0.1.x",
+    "prompt": "0.2.x",
+    "shelljs": "0.3.x"
+  },
+  "bin": {
+    "prior-inventions": "./prior"
+  }
+}
