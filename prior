@@ -165,15 +165,11 @@ prompt.get([
       function add(pkg, match) {
         duplicate.push(match);
         unique.push({
+          description: match.description.length > pkg.description.length ? match.description : pkg.description,
+          created: +pkg.created > +match.created ? match.created : pkg.created,
           name: pkg.name || match.name,
-          description: match.description.length > pkg.description.length
-          ? match.description
-          : pkg.description,
-          fork: match.fork,
-          created: +pkg.created > +match.created
-          ? match.created
-          : pkg.created,
           author: pkg.author,
+          fork: match.fork,
           url: match.url
         });
 
