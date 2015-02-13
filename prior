@@ -7,7 +7,7 @@ var env = process.env
   , async = require('async')
   , kuler = require('kuler')
   , prompt = require('prompt')
-  , argv = require('argh').argv 
+  , argv = require('argh').argv
   , GitHulk = require('githulk')
   , Registry = require('npm-registry')
   , who = require('shelljs').exec('npm whoami', { silent: true }).output.trim();
@@ -40,7 +40,7 @@ prompt.get([
   { name: 'registry', default: Registry.mirrors.nodejitsu }
 ], function received(err, details) {
   if (err) throw err;
-  
+
   var npm = new Registry({ registry: details.registry })
     , github = new GitHulk({ token: details.token });
 
@@ -81,8 +81,8 @@ prompt.get([
         orgs.push({ login: details.github });
 
         async.map(orgs, function map(data, next) {
-          github.repository.list(data.login, { 
-            organization: data.organization 
+          github.repository.list(data.login, {
+            organization: data.organization
           }, next);
         }, function failed(err, listoflists) {
           if (err) return next(err);
@@ -92,11 +92,11 @@ prompt.get([
           listoflists.forEach(function each(repos) {
             Array.prototype.push.apply(list, repos);
           });
-          
+
           async.map(list, function map(repo, next) {
             repo.npm = {};
 
-            github.repository.contents(repo.full_name, { 
+            github.repository.contents(repo.full_name, {
               path: 'package.json'
             }, function (err, data) {
               if (err || !data || !data.length) return next(undefined, repo);
@@ -106,8 +106,8 @@ prompt.get([
               // a package.json so we will have something easier to match
               // against.
               //
-              try { 
-                data = JSON.parse((new Buffer(data[0].contents, data[0].encoding)).toString('utf-8')); 
+              try {
+                data = JSON.parse((new Buffer(data[0].contents, data[0].encoding)).toString('utf-8'));
               } catch (e) { return next(undefined, repo); }
 
               repo.json = data;
@@ -155,17 +155,32 @@ prompt.get([
       , unique = [];
 
     async.eachSeries(data.npm, function find(pkg, next) {
+
+      /**
+       * A simple helper method for assessing which description wins
+       * @param {String} pDesc package description
+       * @param {String} mDesc match description
+       * @api private
+       */
+      function normalizeDescription (pDesc, mDesc) {
+        if (pDesc && !mDesc) { return pDesc; }
+        if (mDesc && !pDesc) { return mDesc; }
+        if (!mDesc && !pDesc) { return null; }
+
+        return mDesc.length > pDesc.length ? mDesc : pDesc;
+      }
       /**
        * Simple helper method for adding a selected package to the unique array.
-       * 
+       *
        * @param {Object} pkg npm package contents.
        * @param {Object} match github contents.
        * @api private
        */
       function add(pkg, match) {
+
         duplicate.push(match);
         unique.push({
-          description: match.description.length > pkg.description.length ? match.description : pkg.description,
+          description: normalizeDescription(pkg.description, match.description),
           created: +pkg.created > +match.created ? match.created : pkg.created,
           name: pkg.name || match.name,
           author: pkg.author,
